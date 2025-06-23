@@ -1,0 +1,13 @@
+{
+  "material-icon-theme.activeIconPack": "nest",
+  "material-icon-theme.folders.associations": {
+    "src": "src",
+    "test": "test",
+    "tests": "test",
+    "lib": "lib",
+    "assets": "assets",
+    "config": "config",
+    "docs": "docs"
+    // "example": "example"
+  }
+}
