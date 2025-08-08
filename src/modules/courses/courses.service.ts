@@ -22,7 +22,6 @@ export class CoursesService {
     console.log('data received:', request);
     console.log(`Returning course with ID: ${request.id}`);
 
-    // ✅ DEVOLVER OBJETO DTO, NO STRING
     return Promise.resolve({
       id: request.id,
       title: 'Curso de NestJS',
