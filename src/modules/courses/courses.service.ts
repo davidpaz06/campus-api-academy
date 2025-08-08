@@ -24,7 +24,7 @@ export class CoursesService {
 
     return Promise.resolve({
       id: request.id,
-      title: 'Curso de NestJS',
+      name: 'Curso de NestJS',
       description: 'Aprende los fundamentos de NestJS',
     });
   }

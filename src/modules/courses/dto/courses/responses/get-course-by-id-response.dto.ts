@@ -11,7 +11,7 @@ export class GetCourseByIdResponseDto {
   @ApiProperty({ description: 'The title of the course' })
   @IsString()
   @IsNotEmpty()
-  title!: string;
+  name!: string;
 
   @ApiProperty({ description: 'The description of the course' })
   @IsString()
