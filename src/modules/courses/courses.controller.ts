@@ -1,35 +1,26 @@
 import { Controller } from '@nestjs/common';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+import { GrpcMethod } from '@nestjs/microservices';
 import { CoursesService } from './courses.service';
-import { CreateCourseDto } from './dto/create-course.dto';
-import { UpdateCourseDto } from './dto/update-course.dto';
+
+import { GreetingRequestDto } from './dto/courses/requests/greeting-request.dto';
+import { GreetingResponseDto } from './dto/courses/responses/greeting-response.dto';
+import { GetCourseByIdRequestDto } from './dto/courses/requests/get-course-by-id-request.dto';
+import { GetCourseByIdResponseDto } from './dto/courses/responses/get-course-by-id-response.dto';
 
 @Controller()
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
-  @MessagePattern('createCourse')
-  create(@Payload() createCourseDto: CreateCourseDto) {
-    return this.coursesService.create(createCourseDto);
+  @GrpcMethod('CoursesService', 'Greeting')
+  async greeting(data: GreetingRequestDto): Promise<GreetingResponseDto> {
+    return await this.coursesService.greeting(data);
   }
 
-  @MessagePattern('findAllCourses')
-  findAll() {
-    return this.coursesService.findAll();
-  }
-
-  @MessagePattern('findOneCourse')
-  findOne(@Payload() id: number) {
-    return this.coursesService.findOne(id);
-  }
-
-  @MessagePattern('updateCourse')
-  update(@Payload() updateCourseDto: UpdateCourseDto) {
-    return this.coursesService.update(updateCourseDto.id, updateCourseDto);
-  }
-
-  @MessagePattern('removeCourse')
-  remove(@Payload() id: number) {
-    return this.coursesService.remove(id);
+  @GrpcMethod('CoursesService', 'GetCourseById')
+  async getCourseById(
+    data: GetCourseByIdRequestDto,
+  ): Promise<GetCourseByIdResponseDto> {
+    console.log('data received:', data);
+    return await this.coursesService.getCourseById(data);
   }
 }

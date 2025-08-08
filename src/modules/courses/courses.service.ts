@@ -1,26 +1,32 @@
 import { Injectable } from '@nestjs/common';
-import { CreateCourseDto } from './dto/create-course.dto';
-import { UpdateCourseDto } from './dto/update-course.dto';
+import {
+  GreetingRequest,
+  GreetingResponse,
+} from 'src/grpc/interfaces/academy.interface';
+import { GetCourseByIdRequestDto } from './dto/courses/requests/get-course-by-id-request.dto';
+import { GetCourseByIdResponseDto } from './dto/courses/responses/get-course-by-id-response.dto';
 
 @Injectable()
 export class CoursesService {
-  create(createCourseDto: CreateCourseDto) {
-    return 'This action adds a new course';
+  greeting(request: GreetingRequest): Promise<GreetingResponse> {
+    const message = `¡Hola ${request.name}! Bienvenido al microservicio Academy 🎓`;
+
+    return Promise.resolve({
+      message,
+    });
   }
 
-  findAll() {
-    return `This action returns all courses`;
-  }
+  async getCourseById(
+    request: GetCourseByIdRequestDto,
+  ): Promise<GetCourseByIdResponseDto> {
+    console.log('data received:', request);
+    console.log(`Returning course with ID: ${request.id}`);
 
-  findOne(id: number) {
-    return `This action returns a #${id} course`;
-  }
-
-  update(id: number, updateCourseDto: UpdateCourseDto) {
-    return `This action updates a #${id} course`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} course`;
+    // ✅ DEVOLVER OBJETO DTO, NO STRING
+    return Promise.resolve({
+      id: request.id,
+      title: 'Curso de NestJS',
+      description: 'Aprende los fundamentos de NestJS',
+    });
   }
 }
