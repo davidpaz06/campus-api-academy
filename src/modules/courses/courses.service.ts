@@ -20,10 +20,10 @@ export class CoursesService {
     request: GetCourseByIdRequestDto,
   ): Promise<GetCourseByIdResponseDto> {
     console.log('data received:', request);
-    console.log(`Returning course with ID: ${request.id}`);
+    console.log(`Returning course with ID: ${request.courseId}`);
 
     return Promise.resolve({
-      id: request.id,
+      id: request.courseId,
       name: 'Curso de NestJS',
       description: 'Aprende los fundamentos de NestJS',
     });

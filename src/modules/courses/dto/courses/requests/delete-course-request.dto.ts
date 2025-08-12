@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsUUID, IsNotEmpty } from 'class-validator';
 
-export class GetCourseByIdRequestDto {
-  @ApiProperty({ description: 'The course ID to retrieve' })
+export class DeleteCourseRequestDto {
+  @ApiProperty({ description: 'Course ID to delete' })
   @IsUUID()
   @IsNotEmpty()
   courseId!: string;

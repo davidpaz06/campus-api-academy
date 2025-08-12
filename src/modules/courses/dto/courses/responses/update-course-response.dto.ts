@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { CourseDto } from '../common/course.dto';
 
-export class GetCourseByIdResponseDto {
+export class UpdateCourseResponseDto {
   @ApiProperty({
-    description: 'Course data',
+    description: 'Updated course data',
     type: CourseDto,
   })
   course!: CourseDto;
