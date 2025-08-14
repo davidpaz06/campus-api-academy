@@ -1,21 +1,13 @@
 export const queries = {
   courses: {
     createCourse: `
-      SELECT create_course($1::course_insert_data, $2::component_insert_data[]) as course_id
+      SELECT create_course(
+        $1::course_insert_data, ARRAY[
+        $2]::component_insert_data[]
+      ) AS course_id
     `,
 
-    getCourseById: `
-      SELECT 
-        c.course_id,
-        c.course_name,
-        c.course_summary,
-        c.course_description,
-        c.institution_id,
-        c.course_image_id,
-        c.created_at
-      FROM course c 
-      WHERE c.course_id = $1
-    `,
+    getCourseById: `SELECT * FROM course c WHERE c.course_id = $1`,
 
     getCoursesByInstitution: `
       SELECT 

@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import Database from 'src/database/db';
-import { CursorUtils } from '../../utils/CursorUtils';
+
+import { CursorUtils } from 'src/utils/CursorUtils';
+import { toPgTuple } from 'src/utils/PgUtils';
 
 // Import all DTOs
 import { GreetingRequestDto } from './dto/courses/requests/greeting-request.dto';
@@ -48,8 +50,6 @@ export class CoursesService {
     createCourseDto: CreateCourseRequestDto,
   ): Promise<CreateCourseResponseDto> {
     try {
-      console.log('🚀 Creating course with data:', createCourseDto);
-
       const {
         courseName,
         courseSummary,
@@ -59,50 +59,51 @@ export class CoursesService {
         components,
       } = createCourseDto;
 
-      // 1. Preparar los datos del curso para la función SQL
-      const courseData = {
-        course_name: courseName,
-        course_summary: courseSummary,
-        course_description: courseDescription || null,
-        institution_id: institutionId,
-        course_image_id: courseImageId || null,
-      };
+      const courseData = [
+        courseName,
+        courseSummary,
+        courseDescription || null,
+        institutionId,
+        courseImageId || null,
+      ];
 
-      // 2. Preparar los datos de los componentes para la función SQL
-      const componentsData = components.map((comp) => ({
-        component_name: comp.componentName,
-        component_summary: comp.componentSummary,
-        component_type_id: comp.componentTypeId,
-        context_body: comp.contextBody || null,
-        position: comp.position,
-        file_id:
+      const componentsDataTuples = components.map((comp) =>
+        toPgTuple([
+          comp.componentName,
+          comp.componentSummary,
+          comp.componentTypeId,
+          comp.contextBody || null,
+          comp.position,
           comp.fileIds && comp.fileIds.length > 0 ? comp.fileIds[0] : null,
-        parent_temp_id: comp.parentTempId || null,
-        real_parent_id: comp.realParentId || null,
-      }));
-
-      console.log('📝 Course data prepared:', courseData);
-      console.log(
-        `🔧 Components data prepared with ${componentsData.length} components: ${JSON.stringify(componentsData)}`,
+          comp.parentTempId || null,
+          comp.realParentId || null,
+        ]),
       );
 
-      // 3. Llamar a la función SQL create_course
-      const result = await this.db.query('courses.createCourse', [
-        courseData,
-        componentsData,
-      ]);
+      const courseTuple = toPgTuple(courseData);
+      const componentTuple = `${componentsDataTuples.join(',')}`;
 
-      const newCourseId: string = result.rows[0].course_id;
+      const query = `
+        SELECT create_course(
+          ${courseTuple}::course_insert_data, ARRAY[
+          ${componentTuple}]::component_insert_data[]
+        ) AS course_id
+      `;
+
+      const result = await this.db.query(query);
+
+      console.log(result.rows[0]);
+
+      const newCourseId: GetCourseByIdRequestDto = {
+        courseId: result.rows[0].course_id,
+      };
       console.log('✅ Course created with ID:', newCourseId);
 
-      // 4. Obtener el curso completo recién creado
       const completeCourse = await this.getCourseById(newCourseId);
 
       console.log('🎯 Course creation completed successfully');
 
-      return {
-        course: completeCourse.course,
-      };
+      return completeCourse;
     } catch (error) {
       if (error instanceof Error) {
         console.error('❌ Error creating course:', error);
@@ -123,22 +124,29 @@ export class CoursesService {
     }
   }
 
-  async getCourseById(id: string): Promise<GetCourseByIdResponseDto> {
+  async getCourseById(
+    getCourseById: GetCourseByIdRequestDto,
+  ): Promise<GetCourseByIdResponseDto> {
+    const { courseId } = getCourseById;
+
+    console.log(`🔍 Finding course by id: ${courseId}`);
     try {
-      const courseResult = await this.db.query('courses.getCourseById', [id]);
+      const courseResult = await this.db.query('courses.getCourseById', [
+        courseId,
+      ]);
 
       if (courseResult.rowCount === 0) {
-        console.log('❌ Course not found by ID:', id);
+        console.log('❌ Course not found by ID:', courseId);
         throw new Error('Course not found');
       }
 
       const componentsResult = await this.db.query(
         'courses.getCourseComponents',
-        [id],
+        [courseId],
       );
 
       console.log(
-        `🔍 Course found by id ${id} with ${componentsResult.rows.length} components`,
+        `🔍 Course found by id ${courseId} with ${componentsResult.rows.length} components`,
       );
 
       const course = {
@@ -167,6 +175,23 @@ export class CoursesService {
       console.error('❌ Error finding course by id:', error);
       throw new Error(
         `Error finding course by id: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+
+  async getCoursesByInstitution(
+    institutionId: string,
+  ): Promise<GetCoursesByInstitutionResponseDto> {
+    console.log(`🔍 Finding courses by institution id: ${institutionId}`);
+    try {
+      const result = await this.db.query('courses.getCoursesByInstitution', [
+        institutionId,
+      ]);
+      return { courses: result.rows };
+    } catch (error) {
+      console.error('❌ Error finding courses by institution id:', error);
+      throw new Error(
+        `Error finding courses by institution id: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
   }

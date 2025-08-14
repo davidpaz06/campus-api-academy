@@ -7,6 +7,7 @@ import { GreetingResponseDto } from './dto/courses/responses/greeting-response.d
 import { GetCourseByIdResponseDto } from './dto/courses/responses/get-course-by-id-response.dto';
 import { CreateCourseRequestDto } from './dto/courses/requests/create-course-request.dto';
 import { CreateCourseResponseDto } from './dto/courses/responses/create-course-response.dto';
+import { GetCourseByIdRequestDto } from './dto/courses/requests/get-course-by-id-request.dto';
 
 @Controller()
 export class CoursesController {
@@ -25,8 +26,10 @@ export class CoursesController {
   }
 
   @GrpcMethod('CoursesService', 'GetCourseById')
-  async getCourseById(id: string): Promise<GetCourseByIdResponseDto> {
-    console.log('id received:', id);
-    return await this.coursesService.getCourseById(id);
+  async getCourseById(
+    getCourseByIdDto: GetCourseByIdRequestDto,
+  ): Promise<GetCourseByIdResponseDto> {
+    console.log('getCourseByIdDto', getCourseByIdDto);
+    return await this.coursesService.getCourseById(getCourseByIdDto);
   }
 }
