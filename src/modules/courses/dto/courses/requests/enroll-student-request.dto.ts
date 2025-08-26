@@ -7,8 +7,8 @@ export class EnrollStudentRequestDto {
   @IsNotEmpty()
   campusUserId!: string;
 
-  @ApiProperty({ description: 'Component ID to enroll in' })
+  @ApiProperty({ description: 'Course ID to enroll in' })
   @IsUUID()
   @IsNotEmpty()
-  componentId!: string;
+  courseId!: string;
 }
