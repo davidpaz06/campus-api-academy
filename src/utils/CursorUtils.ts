@@ -50,29 +50,35 @@ export class CursorUtils {
     idField = 'courseId',
   ) {
     const hasNextPage = items.length > limit;
+    let nextCursor: string | null = null;
+    let paginatedItems: T[];
+
     if (hasNextPage) {
-      items.pop();
+      // Hay más cursos, el extra solo sirve para el cursor
+      const extra = items[limit];
+      nextCursor = this.generateCursor(
+        extra[timestampField] as Date | string,
+        extra[idField] as string,
+      );
+      paginatedItems = items.slice(0, limit);
+    } else {
+      // Si no hay más cursos, incluye todos los items (incluido el extra si solo queda uno)
+      paginatedItems = items;
     }
 
     const pageInfo = {
       hasNextPage: hasNextPage,
       hasPreviousPage: !!cursor,
-      nextCursor:
-        hasNextPage && items.length > 0
-          ? this.generateCursor(
-              items[items.length - 1][timestampField] as Date | string,
-              items[items.length - 1][idField] as string,
-            )
-          : null,
+      nextCursor: nextCursor,
       previousCursor:
-        items.length > 0
+        paginatedItems.length > 0
           ? this.generateCursor(
-              items[0][timestampField] as Date | string,
-              items[0][idField] as string,
+              paginatedItems[0][timestampField] as Date | string,
+              paginatedItems[0][idField] as string,
             )
           : null,
     };
 
-    return { items, pageInfo };
+    return { items: paginatedItems, pageInfo };
   }
 }
