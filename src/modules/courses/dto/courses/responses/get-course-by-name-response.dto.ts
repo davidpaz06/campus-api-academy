@@ -13,5 +13,5 @@ export class GetCourseByNameResponseDto {
     description: 'Pagination information',
     type: PageInfoDto,
   })
-  pageInfo!: PageInfoDto;
+  pageInfo?: PageInfoDto;
 }
