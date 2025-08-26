@@ -6,6 +6,7 @@ import { toPgTuple } from 'src/utils/PgUtils';
 
 // Import all DTOs
 import { CourseDto } from './dto/courses/common/course.dto';
+import { CourseEnrollmentDto } from './dto/courses/common/course-enrollment.dto';
 
 import { GreetingRequestDto } from './dto/courses/requests/greeting-request.dto';
 import { GreetingResponseDto } from './dto/courses/responses/greeting-response.dto';
@@ -28,10 +29,11 @@ import { UpdateCourseResponseDto } from './dto/courses/responses/update-course-r
 // import { DeleteCourseRequestDto } from './dto/courses/requests/delete-course-request.dto';
 // import { DeleteCourseResponseDto } from './dto/courses/responses/delete-course-response.dto';
 
-// import { EnrollStudentRequestDto } from './dto/courses/requests/enroll-student-request.dto';
-// import { EnrollStudentResponseDto } from './dto/courses/responses/enroll-student-response.dto';
-// import { GetCourseEnrollmentsRequestDto } from './dto/courses/requests/get-course-enrollments-request.dto';
-// import { GetCourseEnrollmentsResponseDto } from './dto/courses/responses/get-course-enrollments-response.dto';
+import { EnrollStudentRequestDto } from './dto/courses/requests/enroll-student-request.dto';
+import { EnrollStudentResponseDto } from './dto/courses/responses/enroll-student-response.dto';
+
+import { GetCourseEnrollmentsRequestDto } from './dto/courses/requests/get-course-enrollments-request.dto';
+import { GetCourseEnrollmentsResponseDto } from './dto/courses/responses/get-course-enrollments-response.dto';
 
 @Injectable()
 export class CoursesService {
@@ -320,6 +322,92 @@ export class CoursesService {
       console.error('❌ Error updating course:', error);
       throw new Error(
         `Error updating course: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+
+  async enrollStudent(
+    enrollStudentDto: EnrollStudentRequestDto,
+  ): Promise<EnrollStudentResponseDto> {
+    try {
+      const { courseId, campusUserId } = enrollStudentDto;
+
+      const result = await this.db.query('courses.enrollStudent', [
+        courseId,
+        campusUserId,
+      ]);
+
+      if (result.rowCount === 0) {
+        console.log('❌ Enrollment failed:', enrollStudentDto);
+        throw new Error('Enrollment failed');
+      }
+
+      const enrollment: CourseEnrollmentDto = {
+        courseEnrollmentId: result.rows[0].course_enrollment_id,
+        courseId: result.rows[0].course_id,
+        campusUserId: result.rows[0].campus_user_id,
+        enrolledAt: result.rows[0].enrolled_at,
+      };
+
+      return { enrollment };
+    } catch (error) {
+      console.error('❌ Error enrolling student:', error);
+      throw new Error(
+        `Error enrolling student: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+
+  async getCourseEnrollments(
+    getCourseEnrollmentsDto: GetCourseEnrollmentsRequestDto,
+  ): Promise<GetCourseEnrollmentsResponseDto> {
+    try {
+      const { courseId, cursor, limit } = getCourseEnrollmentsDto;
+      console.log(`🔍 Finding course enrollments for courseId: ${courseId}`);
+      let cursorTimestamp: string | null = null;
+      let cursorEnrollmentId: string | null = null;
+      if (cursor) {
+        try {
+          const parsed = CursorUtils.parseCursor(cursor);
+          cursorTimestamp =
+            parsed.timestamp instanceof Date
+              ? parsed.timestamp.toISOString()
+              : parsed.timestamp;
+          cursorEnrollmentId = parsed.id;
+        } catch (err) {
+          console.error('❌ Error parsing cursor:', err);
+          throw new Error('Invalid cursor');
+        }
+      }
+
+      const result = await this.db.query('courses.getCourseEnrollments', [
+        courseId,
+        cursorTimestamp,
+        cursorEnrollmentId,
+        limit + 1,
+      ]);
+
+      const enrollments: CourseEnrollmentDto[] = result.rows.map((row) => ({
+        courseEnrollmentId: row.course_enrollment_id,
+        courseId: row.course_id,
+        campusUserId: row.campus_user_id,
+        enrolledAt: row.enrolled_at,
+      }));
+
+      const { items, pageInfo } = CursorUtils.generatePageInfo(
+        enrollments,
+        limit,
+        cursor,
+      );
+
+      return {
+        enrollments: items,
+        pageInfo,
+      };
+    } catch (error) {
+      console.error('❌ Error finding course enrollments:', error);
+      throw new Error(
+        `Error finding course enrollments: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
   }
