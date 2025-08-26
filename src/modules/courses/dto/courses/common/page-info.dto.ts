@@ -5,13 +5,13 @@ export class PageInfoDto {
     description: 'Cursor for next page',
     required: false,
   })
-  nextCursor?: string;
+  nextCursor?: string | null;
 
   @ApiProperty({
     description: 'Cursor for previous page',
     required: false,
   })
-  previousCursor?: string;
+  previousCursor?: string | null;
 
   @ApiProperty({ description: 'Whether there is a next page' })
   hasNextPage!: boolean;
