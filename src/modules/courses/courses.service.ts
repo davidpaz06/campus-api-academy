@@ -5,6 +5,8 @@ import { CursorUtils } from 'src/utils/CursorUtils';
 import { toPgTuple } from 'src/utils/PgUtils';
 
 // Import all DTOs
+import { CourseDto } from './dto/courses/common/course.dto';
+
 import { GreetingRequestDto } from './dto/courses/requests/greeting-request.dto';
 import { GreetingResponseDto } from './dto/courses/responses/greeting-response.dto';
 
@@ -23,13 +25,13 @@ import { GetCourseByNameResponseDto } from './dto/courses/responses/get-course-b
 import { UpdateCourseRequestDto } from './dto/courses/requests/update-course-request.dto';
 import { UpdateCourseResponseDto } from './dto/courses/responses/update-course-response.dto';
 
-import { DeleteCourseRequestDto } from './dto/courses/requests/delete-course-request.dto';
-import { DeleteCourseResponseDto } from './dto/courses/responses/delete-course-response.dto';
+// import { DeleteCourseRequestDto } from './dto/courses/requests/delete-course-request.dto';
+// import { DeleteCourseResponseDto } from './dto/courses/responses/delete-course-response.dto';
 
-import { EnrollStudentRequestDto } from './dto/courses/requests/enroll-student-request.dto';
-import { EnrollStudentResponseDto } from './dto/courses/responses/enroll-student-response.dto';
-import { GetCourseEnrollmentsRequestDto } from './dto/courses/requests/get-course-enrollments-request.dto';
-import { GetCourseEnrollmentsResponseDto } from './dto/courses/responses/get-course-enrollments-response.dto';
+// import { EnrollStudentRequestDto } from './dto/courses/requests/enroll-student-request.dto';
+// import { EnrollStudentResponseDto } from './dto/courses/responses/enroll-student-response.dto';
+// import { GetCourseEnrollmentsRequestDto } from './dto/courses/requests/get-course-enrollments-request.dto';
+// import { GetCourseEnrollmentsResponseDto } from './dto/courses/responses/get-course-enrollments-response.dto';
 
 @Injectable()
 export class CoursesService {
@@ -125,9 +127,9 @@ export class CoursesService {
   }
 
   async getCourseById(
-    getCourseById: GetCourseByIdRequestDto,
+    getCourseByIdDto: GetCourseByIdRequestDto,
   ): Promise<GetCourseByIdResponseDto> {
-    const { courseId } = getCourseById;
+    const { courseId } = getCourseByIdDto;
 
     console.log(`🔍 Finding course by id: ${courseId}`);
     try {
@@ -180,18 +182,144 @@ export class CoursesService {
   }
 
   async getCoursesByInstitution(
-    institutionId: string,
+    getCoursesByInstitutionDto: GetCoursesByInstitutionRequestDto,
   ): Promise<GetCoursesByInstitutionResponseDto> {
-    console.log(`🔍 Finding courses by institution id: ${institutionId}`);
     try {
+      const { institutionId, cursor, limit } = getCoursesByInstitutionDto;
+
+      let cursorTimestamp: string | null = null;
+      let cursorCourseId: string | null = null;
+      if (cursor) {
+        try {
+          const parsed = CursorUtils.parseCursor(cursor);
+          cursorTimestamp =
+            parsed.timestamp instanceof Date
+              ? parsed.timestamp.toISOString()
+              : parsed.timestamp;
+          cursorCourseId = parsed.id;
+        } catch (err) {
+          console.error('❌ Error parsing cursor:', err);
+          throw new Error('Invalid cursor');
+        }
+      }
+
       const result = await this.db.query('courses.getCoursesByInstitution', [
         institutionId,
+        cursorTimestamp,
+        cursorCourseId,
+        limit + 1,
       ]);
-      return { courses: result.rows };
+
+      const courses: CourseDto[] = result.rows.map((course) => ({
+        courseId: course.course_id,
+        courseName: course.course_name,
+        courseSummary: course.course_summary,
+        courseDescription: course.course_description,
+        institutionId: course.institution_id,
+        courseImageId: course.course_image_id,
+        createdAt: course.created_at,
+      }));
+
+      const { items, pageInfo } = CursorUtils.generatePageInfo(
+        courses,
+        limit,
+        cursor,
+      );
+
+      return {
+        courses: items,
+        pageInfo,
+      };
     } catch (error) {
       console.error('❌ Error finding courses by institution id:', error);
       throw new Error(
         `Error finding courses by institution id: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+
+  async getCourseByName(
+    getCourseByNameDto: GetCourseByNameRequestDto,
+  ): Promise<GetCourseByNameResponseDto> {
+    try {
+      const { courseName, institutionId, cursor, limit } = getCourseByNameDto;
+      console.log(`🔍 Finding course by name: ${courseName}`);
+      let cursorTimestamp: string | null = null;
+      let cursorCourseId: string | null = null;
+      if (cursor) {
+        try {
+          const parsed = CursorUtils.parseCursor(cursor);
+          cursorTimestamp =
+            parsed.timestamp instanceof Date
+              ? parsed.timestamp.toISOString()
+              : parsed.timestamp;
+          cursorCourseId = parsed.id;
+        } catch (err) {
+          console.error('❌ Error parsing cursor:', err);
+          throw new Error('Invalid cursor');
+        }
+      }
+
+      const result = await this.db.query('courses.getCoursesByName', [
+        institutionId,
+        courseName,
+        cursorTimestamp,
+        cursorCourseId,
+        limit + 1,
+      ]);
+
+      if (result.rowCount === 0) {
+        console.log('❌ Course not found by name:', courseName);
+        throw new Error('Course not found');
+      }
+
+      const courses = result.rows.map((row) => ({
+        courseId: row.course_id,
+        courseName: row.course_name,
+        courseSummary: row.course_summary,
+        courseImageId: row.course_image_id,
+        createdAt: row.created_at,
+      }));
+
+      return { courses };
+    } catch (error) {
+      console.error('❌ Error finding course by name:', error);
+      throw new Error(
+        `Error finding course by name: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+
+  async updateCourse(
+    updateCourseDto: UpdateCourseRequestDto,
+  ): Promise<UpdateCourseResponseDto> {
+    try {
+      const {
+        courseId,
+        courseName,
+        courseSummary,
+        courseDescription,
+        courseImageId,
+      } = updateCourseDto;
+
+      const result = await this.db.query('courses.updateCourse', [
+        courseName ?? null,
+        courseSummary ?? null,
+        courseDescription ?? null,
+        courseImageId ?? null,
+        courseId,
+      ]);
+
+      if (result.rowCount === 0) {
+        console.log('❌ Course not found for update:', courseId);
+        throw new Error('Course not found');
+      }
+
+      return { course: result.rows[0] };
+    } catch (error) {
+      console.error('❌ Error updating course:', error);
+      throw new Error(
+        `Error updating course: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
   }

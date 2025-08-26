@@ -8,6 +8,12 @@ import { GetCourseByIdResponseDto } from './dto/courses/responses/get-course-by-
 import { CreateCourseRequestDto } from './dto/courses/requests/create-course-request.dto';
 import { CreateCourseResponseDto } from './dto/courses/responses/create-course-response.dto';
 import { GetCourseByIdRequestDto } from './dto/courses/requests/get-course-by-id-request.dto';
+import { GetCoursesByInstitutionRequestDto } from './dto/courses/requests/get-courses-by-institution-request.dto';
+import { GetCoursesByInstitutionResponseDto } from './dto/courses/responses/get-courses-by-institution-response.dto';
+import { GetCourseByNameResponseDto } from './dto/courses/responses/get-course-by-name-response.dto';
+import { GetCourseByNameRequestDto } from './dto/courses/requests/get-course-by-name-request.dto';
+import { UpdateCourseResponseDto } from './dto/courses/responses/update-course-response.dto';
+import { UpdateCourseRequestDto } from './dto/courses/requests/update-course-request.dto';
 
 @Controller()
 export class CoursesController {
@@ -29,7 +35,30 @@ export class CoursesController {
   async getCourseById(
     getCourseByIdDto: GetCourseByIdRequestDto,
   ): Promise<GetCourseByIdResponseDto> {
-    console.log('getCourseByIdDto', getCourseByIdDto);
     return await this.coursesService.getCourseById(getCourseByIdDto);
+  }
+
+  @GrpcMethod('CoursesService', 'GetCoursesByInstitution')
+  async getCoursesByInstitution(
+    getCoursesByInstitutionDto: GetCoursesByInstitutionRequestDto,
+  ): Promise<GetCoursesByInstitutionResponseDto> {
+    return await this.coursesService.getCoursesByInstitution(
+      getCoursesByInstitutionDto,
+    );
+  }
+
+  @GrpcMethod('CoursesService', 'GetCourseByName')
+  async getCourseByName(
+    getCourseByNameDto: GetCourseByNameRequestDto,
+  ): Promise<GetCourseByNameResponseDto> {
+    console.log('getCourseByNameDto', getCourseByNameDto);
+    return await this.coursesService.getCourseByName(getCourseByNameDto);
+  }
+
+  @GrpcMethod('CoursesService', 'UpdateCourse')
+  async updateCourse(
+    updateCourseDto: UpdateCourseRequestDto,
+  ): Promise<UpdateCourseResponseDto> {
+    return await this.coursesService.updateCourse(updateCourseDto);
   }
 }
