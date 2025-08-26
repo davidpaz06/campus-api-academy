@@ -83,19 +83,19 @@ export const queries = {
     `,
 
     enrollStudent: `
-      INSERT INTO course_enrollment (component_id, campus_user_id)
+      INSERT INTO course_enrollment (course_id, campus_user_id)
       VALUES ($1, $2)
-      RETURNING course_enrollment_id, component_id, campus_user_id, enrolled_at
+      RETURNING *;
     `,
 
     getCourseEnrollments: `
       SELECT 
         ce.course_enrollment_id,
-        ce.component_id,
+        ce.course_id,
         ce.campus_user_id,
         ce.enrolled_at
       FROM course_enrollment ce
-      JOIN component c ON ce.component_id = c.component_id
+      JOIN course c ON ce.course_id = c.course_id
       WHERE c.course_id = $1
         AND ($2::timestamptz IS NULL OR (ce.enrolled_at, ce.course_enrollment_id) < ($2::timestamptz, $3::uuid))
       ORDER BY ce.enrolled_at DESC, ce.course_enrollment_id DESC
