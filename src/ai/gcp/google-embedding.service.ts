@@ -17,7 +17,7 @@ export class GoogleEmbeddingService {
   async init() {
     if (!this.client) {
       const auth = new GoogleAuth({
-        keyFile: 'vertical-task-455721-e5-bdeefcfe2c8b.json',
+        keyFile: process.env.GCP_CREDENTIALS!,
         scopes: ['https://www.googleapis.com/auth/cloud-platform'],
       });
       this.client = await auth.getClient();
