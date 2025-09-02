@@ -75,10 +75,10 @@ export class CreateCourseRequestDto {
   @IsNotEmpty()
   courseSummary!: string;
 
-  @ApiProperty({ description: 'Description of the course', required: false })
+  @ApiProperty({ description: 'Description of the course', required: true })
   @IsOptional()
   @IsString()
-  courseDescription?: string;
+  courseDescription!: string;
 
   @ApiProperty({ description: 'Institution ID' })
   @IsUUID()

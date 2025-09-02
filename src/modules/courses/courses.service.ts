@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import Database from 'src/database/db';
+import { GoogleEmbeddingService } from 'src/ai/gcp/google-embedding.service';
 
 import { CursorUtils } from 'src/utils/CursorUtils';
 import { toPgTuple } from 'src/utils/PgUtils';
@@ -38,7 +39,7 @@ import { GetCourseEnrollmentsResponseDto } from './dto/courses/responses/get-cou
 @Injectable()
 export class CoursesService {
   private db: Database;
-  constructor() {
+  constructor(private readonly googleEmbeddingService: GoogleEmbeddingService) {
     this.db = Database.getInstance();
   }
 
@@ -84,13 +85,30 @@ export class CoursesService {
         ]),
       );
 
+      const embeddingContent: string[] = [
+        courseName,
+        courseSummary,
+        courseDescription,
+      ];
+
+      const embedding = await this.googleEmbeddingService.getEmbedding(
+        ...embeddingContent,
+      );
+
       const courseTuple = toPgTuple(courseData);
       const componentTuple = `${componentsDataTuples.join(',')}`;
+      const embeddingTuple = toPgTuple([
+        embedding.model,
+        embedding.dimension,
+        `[${embedding.embedding.join(',')}]`,
+        embedding.normalized,
+      ]);
 
       const query = `
         SELECT create_course(
-          ${courseTuple}::course_insert_data, ARRAY[
-          ${componentTuple}]::component_insert_data[]
+          ${courseTuple}::course_insert_data, 
+          ARRAY[${componentTuple}]::component_insert_data[], 
+          ${embeddingTuple}::embedding_insert_data
         ) AS course_id
       `;
 
