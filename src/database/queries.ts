@@ -102,4 +102,20 @@ export const queries = {
       LIMIT $4
     `,
   },
+
+  ai: {
+    cosineSimilarity: `
+      SELECT 
+        e.embedding_id,
+        e.object_id,
+        e.object_type,
+        e.model,
+        e.created_at,
+        1 - (e.embedding <=> $1::vector) AS cosine_similarity
+      FROM embedding e
+      WHERE 1 - (e.embedding <=> $1::vector) >= 0.7
+      ORDER BY e.embedding <=> $1::vector
+      LIMIT $2
+    `,
+  },
 };
