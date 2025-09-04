@@ -36,7 +36,7 @@ import { EnrollStudentResponseDto } from './dto/courses/responses/enroll-student
 import { GetCourseEnrollmentsRequestDto } from './dto/courses/requests/get-course-enrollments-request.dto';
 import { GetCourseEnrollmentsResponseDto } from './dto/courses/responses/get-course-enrollments-response.dto';
 
-import { SearchCourseWithAiReqDto } from './dto/courses/requests/get-course-with-ai-request.dto';
+import { SearchCourseWithAiReqDto } from './dto/courses/requests/search-course-with-ai-request.dto';
 import { SearchCourseWithAiResDto } from './dto/courses/responses/search-course-with-ai-response.dto';
 
 // AI
