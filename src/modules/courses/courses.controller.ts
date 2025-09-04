@@ -26,6 +26,9 @@ import { EnrollStudentResponseDto } from './dto/courses/responses/enroll-student
 import { GetCourseEnrollmentsRequestDto } from './dto/courses/requests/get-course-enrollments-request.dto';
 import { GetCourseEnrollmentsResponseDto } from './dto/courses/responses/get-course-enrollments-response.dto';
 
+import { SearchCourseWithAiReqDto } from './dto/courses/requests/get-course-with-ai-request.dto';
+import { SearchCourseWithAiResDto } from './dto/courses/responses/search-course-with-ai-response.dto';
+
 @Controller()
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
@@ -40,6 +43,13 @@ export class CoursesController {
     createCourseDto: CreateCourseRequestDto,
   ): Promise<CreateCourseResponseDto> {
     return await this.coursesService.createCourse(createCourseDto);
+  }
+
+  @GrpcMethod('CoursesService', 'SearchCourseWithAi')
+  async searchCourseWithAi(
+    getCourseWithAiDto: SearchCourseWithAiReqDto,
+  ): Promise<SearchCourseWithAiResDto> {
+    return await this.coursesService.searchCourseWithAi(getCourseWithAiDto);
   }
 
   @GrpcMethod('CoursesService', 'GetCourseById')

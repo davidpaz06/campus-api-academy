@@ -36,11 +36,21 @@ import { EnrollStudentResponseDto } from './dto/courses/responses/enroll-student
 import { GetCourseEnrollmentsRequestDto } from './dto/courses/requests/get-course-enrollments-request.dto';
 import { GetCourseEnrollmentsResponseDto } from './dto/courses/responses/get-course-enrollments-response.dto';
 
+import { SearchCourseWithAiReqDto } from './dto/courses/requests/get-course-with-ai-request.dto';
+import { SearchCourseWithAiResDto } from './dto/courses/responses/search-course-with-ai-response.dto';
+
+// AI
+import { XavierMessage, XavierService } from 'src/ai/xavier/xavier.service';
+import { prompts } from 'src/ai/xavier/prompts/prompts';
+
 @Injectable()
 export class CoursesService {
   private db: Database;
+  private xavier: XavierService;
+
   constructor(private readonly googleEmbeddingService: GoogleEmbeddingService) {
     this.db = Database.getInstance();
+    this.xavier = new XavierService();
   }
 
   greeting(request: GreetingRequestDto): Promise<GreetingResponseDto> {
@@ -143,6 +153,64 @@ export class CoursesService {
         throw new Error(`Failed to create course: ${error.message}`);
       }
       throw new Error('Failed to create course: Unknown error');
+    }
+  }
+
+  async searchCourseWithAi(
+    getCourseWithAiDto: SearchCourseWithAiReqDto,
+  ): Promise<SearchCourseWithAiResDto> {
+    try {
+      const prompt = getCourseWithAiDto.messages.pop()?.content,
+        embeddedPrompt = await this.googleEmbeddingService.getEmbedding(
+          prompt!,
+        ),
+        embeddingArray = `[${embeddedPrompt.embedding.join(',')}]`,
+        result = await this.db.query('ai.cosineSimilarity', [
+          embeddingArray,
+          5,
+        ]);
+
+      console.log(result.rows);
+
+      type CosineSimilarityRow = { object_id: string };
+      const coursesId = (result.rows as CosineSimilarityRow[]).map(
+        (course) => course.object_id,
+      );
+
+      const completeCourses = await Promise.all(
+        coursesId.map((id) => this.getCourseById({ courseId: id })),
+      );
+
+      console.log(completeCourses);
+
+      const coursesInfo = completeCourses
+        .filter((courseResponse) => courseResponse.course)
+        .map((courseResponse) => {
+          const course = courseResponse.course;
+          return `**${course.courseName}**
+                  Resumen: ${course.courseSummary}
+                  Descripción: ${course.courseDescription || 'No disponible'}`;
+        })
+        .join('\n\n');
+
+      const xavierMessages: XavierMessage[] = [
+        {
+          role: 'system',
+          content: prompts.courses.searchCourseWithAi(prompt!, coursesInfo),
+        },
+        {
+          role: 'user',
+          content: prompt!,
+        },
+      ];
+
+      const res = await this.xavier.chat(xavierMessages);
+      return { response: res };
+    } catch (error) {
+      console.error('❌ Error finding course with AI assistance:', error);
+      throw new Error(
+        `Error finding course with AI assistance: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
