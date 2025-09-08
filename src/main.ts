@@ -124,36 +124,6 @@ async function bootstrap() {
       process.exit(1);
     }, 30000);
 
-    app.getHttpAdapter().post('/test-internal-grpc', (req, res) => {
-      try {
-        console.log('🧪 Internal gRPC test requested');
-
-        // Simular llamada gRPC interna
-        const testData = {
-          messages: [
-            { role: 'system', content: 'Test message' },
-            { role: 'user', content: 'Hello from internal test' },
-          ],
-        };
-
-        res.status(200).json({
-          status: 'gRPC_READY',
-          service: 'academy',
-          grpc_url: grpcUrl,
-          test_data: testData,
-          internal_url: 'campus-api-academy.railway.internal:50051',
-          timestamp: new Date().toISOString(),
-        });
-      } catch (error) {
-        console.error('❌ Internal gRPC test error:', error);
-        res.status(500).json({
-          status: 'gRPC_ERROR',
-          error: error instanceof Error ? error.message : String(error),
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
-
     await app.startAllMicroservices();
     clearTimeout(grpcStartTimeout);
     console.log('✅ gRPC microservices started successfully');
