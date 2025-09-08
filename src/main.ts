@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { getProtoPath } from '@davidpaz06/shared';
+import { ServerCredentials } from '@grpc/grpc-js';
 
 async function bootstrap() {
   try {
@@ -49,6 +50,7 @@ async function bootstrap() {
             getProtoPath('grading'),
           ],
           url: grpcUrl,
+          credentials: ServerCredentials.createInsecure(),
           keepalive: {
             keepaliveTimeMs: 30000,
             keepaliveTimeoutMs: 5000,
