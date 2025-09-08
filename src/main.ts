@@ -26,12 +26,15 @@ async function bootstrap() {
     });
     console.log('✅ NestJS app created successfully');
 
+    // SEPARAR PUERTOS: gRPC en 50051, HTTP en 3000
     const httpPort = process.env.PORT || 3000;
-    const grpcUrl = `0.0.0.0:${httpPort}`;
+    const grpcPort = process.env.GRPC_PORT || 50051;
+    const grpcUrl = `0.0.0.0:${grpcPort}`;
 
     console.log('🚀 Configuring gRPC at:', grpcUrl);
+    console.log('🌐 HTTP server will run on port:', httpPort);
 
-    // Configurar gRPC con manejo de errores
+    // Configurar gRPC con puerto separado
     try {
       app.connectMicroservice<MicroserviceOptions>({
         transport: Transport.GRPC,
@@ -46,6 +49,7 @@ async function bootstrap() {
             getProtoPath('roadmaps'),
             getProtoPath('grading'),
           ],
+          // USAR PUERTO SEPARADO PARA gRPC
           url: grpcUrl,
           keepalive: {
             keepaliveTimeMs: 30000,
@@ -80,9 +84,11 @@ async function bootstrap() {
             'academy.grading.v1',
           ],
           network: {
-            mode: 'HTTP+gRPC_HYBRID',
+            mode: 'SEPARATED_PORTS',
             railway_internal: 'campus-api-academy.railway.internal',
             host: process.env.HOST || '0.0.0.0',
+            grpc_port: grpcPort,
+            http_port: httpPort,
           },
           services: {
             database: !!process.env.DATABASE_URL,
@@ -101,33 +107,6 @@ async function bootstrap() {
       }
     });
 
-    // Endpoint de debug adicional
-    app.getHttpAdapter().get('/debug', (req, res) => {
-      res.status(200).json({
-        environment: {
-          NODE_ENV: process.env.NODE_ENV,
-          HOST: process.env.HOST,
-          PORT: process.env.PORT,
-          GRPC_PORT: process.env.GRPC_PORT,
-        },
-        services: {
-          database_configured: !!process.env.DATABASE_URL,
-          gcp_configured: !!process.env.GCP_PROJECT_ID,
-          xavier_configured: !!process.env.HF_TOKEN,
-          github_configured: !!process.env.GITHUB_TOKEN,
-        },
-        grpc: {
-          url: grpcUrl,
-          packages: [
-            'academy.courses.v1',
-            'academy.roadmaps.v1',
-            'academy.grading.v1',
-          ],
-        },
-        timestamp: new Date().toISOString(),
-      });
-    });
-
     console.log('✅ Health check endpoints configured');
 
     // Iniciar microservicios gRPC con timeout
@@ -141,7 +120,7 @@ async function bootstrap() {
     clearTimeout(grpcStartTimeout);
     console.log('✅ gRPC microservices started successfully');
 
-    // Iniciar servidor HTTP con timeout
+    // Iniciar servidor HTTP con timeout - EN PUERTO DIFERENTE
     console.log('🚀 Starting HTTP server...');
     const httpStartTimeout = setTimeout(() => {
       console.error('❌ HTTP server startup timeout after 30 seconds');
@@ -157,18 +136,14 @@ async function bootstrap() {
       `🩺 Health check available at: http://0.0.0.0:${httpPort}/health`,
     );
     console.log(
-      `🔍 Debug endpoint available at: http://0.0.0.0:${httpPort}/debug`,
-    );
-    console.log(
       `🛡️ Client origin validation: ${process.env.NODE_ENV === 'production' ? 'ENABLED' : 'DEVELOPMENT MODE'}`,
     );
     console.log(
       `📦 Packages: academy.courses.v1, academy.roadmaps.v1, academy.grading.v1`,
     );
     console.log(
-      `🔒 Allowed clients: ${process.env.GATEWAY_SERVICE_NAME || 'campus-api-gateway'}`,
+      `🌐 Railway mode: Separated ports - gRPC:${grpcPort}, HTTP:${httpPort}`,
     );
-    console.log(`🌐 Railway mode: HTTP+gRPC hybrid on port ${httpPort}`);
     console.log('🎉 Academy service fully initialized and ready!');
 
     // Graceful shutdown
@@ -200,6 +175,7 @@ async function bootstrap() {
       NODE_ENV: process.env.NODE_ENV,
       HOST: process.env.HOST,
       PORT: process.env.PORT,
+      GRPC_PORT: process.env.GRPC_PORT,
       DATABASE_URL: process.env.DATABASE_URL ? '[CONFIGURED]' : '[MISSING]',
       GCP_PROJECT_ID: process.env.GCP_PROJECT_ID || '[MISSING]',
       HF_TOKEN: process.env.HF_TOKEN ? '[CONFIGURED]' : '[MISSING]',

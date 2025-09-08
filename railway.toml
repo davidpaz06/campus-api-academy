@@ -11,6 +11,9 @@ cmds = []
 
 
 
-# Railway hybrid mode: HTTP + gRPC en el mismo puerto
+# Exponer ambos puertos en Railway
+[networking]
+serviceName = "campus-api-academy"
+
 [experimental]
 configAsCode = true
