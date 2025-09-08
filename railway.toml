@@ -9,11 +9,7 @@ npm = "9"
 nixPkgs = ["nodejs_20", "npm-9_x"]
 cmds = []
 
-[deploy]
-healthcheckPath = "/health"
-healthcheckTimeout = 300
-restartPolicyType = "ON_FAILURE"
-restartPolicyMaxRetries = 10
+
 
 # Railway hybrid mode: HTTP + gRPC en el mismo puerto
 [experimental]
