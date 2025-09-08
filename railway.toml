@@ -5,6 +5,22 @@ builder = "NIXPACKS"
 nodejs = "20"
 npm = "9"
 
+[phases.setup]
+cmds = [
+  "npm config set @davidpaz06:registry https://npm.pkg.github.com",
+  "npm config set //npm.pkg.github.com/:_authToken $GITHUB_TOKEN",
+  "npm config set registry https://registry.npmjs.org"
+]
+
+[phases.install]
+cmds = ["npm ci --production=false"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm run start:prod"
+
 [deploy]
 healthcheckPath = "/health"
 healthcheckTimeout = 300
