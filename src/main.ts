@@ -13,7 +13,9 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
 
-  const grpcUrl = `${process.env.HOST || '0.0.0.0'}:${process.env.GRPC_PORT || 50051}`;
+  const httpPort = process.env.PORT || 3000;
+  const grpcUrl = `0.0.0.0:${httpPort}`;
+
   console.log('🚀 Configuring gRPC at:', grpcUrl);
 
   app.connectMicroservice<MicroserviceOptions>({
@@ -29,7 +31,16 @@ async function bootstrap() {
         getProtoPath('roadmaps'),
         getProtoPath('grading'),
       ],
-      url: `${process.env.HOST || '0.0.0.0'}:${process.env.GRPC_PORT || 50051}`,
+      url: grpcUrl,
+
+      keepalive: {
+        keepaliveTimeMs: 30000,
+        keepaliveTimeoutMs: 5000,
+        keepalivePermitWithoutCalls: 1,
+        http2MaxPingsWithoutData: 0,
+        http2MinTimeBetweenPingsMs: 10000,
+        http2MinPingIntervalWithoutDataMs: 300000,
+      },
     },
   });
 
@@ -39,26 +50,30 @@ async function bootstrap() {
       status: 'OK',
       service: 'academy',
       grpc: 'available',
+      grpc_url: grpcUrl,
+      http_port: httpPort,
       packages: [
         'academy.courses.v1',
         'academy.roadmaps.v1',
         'academy.grading.v1',
       ],
+      network: {
+        mode: 'HTTP+gRPC_HYBRID',
+        railway_internal: 'campus-api-academy.railway.internal',
+      },
       timestamp: new Date().toISOString(),
     });
   });
 
-  // Iniciar microservicios gRPC
+  // IMPORTANTE: Iniciar microservicios gRPC ANTES del servidor HTTP
   await app.startAllMicroservices();
+  console.log('✅ gRPC microservices started successfully');
 
-  // Iniciar servidor HTTP para health checks
-  const httpPort = process.env.PORT || 3000;
+  // Iniciar servidor HTTP
   await app.listen(httpPort, '0.0.0.0');
 
   console.log(`🚀 Academy HTTP server running on port ${httpPort}`);
-  console.log(
-    `🚀 Academy gRPC microservice running on ${process.env.HOST || '0.0.0.0'}:${process.env.GRPC_PORT || 50051}`,
-  );
+  console.log(`🚀 Academy gRPC microservice running on ${grpcUrl}`);
   console.log(
     `🛡️ Client origin validation: ${process.env.NODE_ENV === 'production' ? 'ENABLED' : 'DEVELOPMENT MODE'}`,
   );
@@ -68,9 +83,7 @@ async function bootstrap() {
   console.log(
     `🔒 Allowed clients: ${process.env.GATEWAY_SERVICE_NAME || 'campus-api-gateway'}`,
   );
-
-  if (process.env.GATEWAY_IP) {
-    console.log(`🌐 Allowed Gateway IP: ${process.env.GATEWAY_IP}`);
-  }
+  console.log(`🌐 Railway mode: HTTP+gRPC hybrid on port ${httpPort}`);
 }
+
 void bootstrap();
