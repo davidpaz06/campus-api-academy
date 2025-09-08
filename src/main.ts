@@ -51,6 +51,14 @@ async function bootstrap() {
           ],
           url: grpcUrl,
           credentials: ServerCredentials.createInsecure(),
+          loader: {
+            keepCase: true,
+            longs: String,
+            enums: String,
+            defaults: true,
+            oneofs: true,
+          },
+
           keepalive: {
             keepaliveTimeMs: 30000,
             keepaliveTimeoutMs: 5000,
