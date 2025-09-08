@@ -6,6 +6,17 @@ import { getProtoPath } from '@davidpaz06/shared';
 
 async function bootstrap() {
   try {
+    console.log('🏗️ Creating NestJS application...');
+    const app = await NestFactory.create(AppModule, {
+      logger: ['error', 'warn', 'log', 'debug', 'verbose'],
+    });
+    console.log('✅ NestJS app created successfully');
+
+    const httpPort = process.env.PORT || 3000;
+    const grpcPort = process.env.GRPC_PORT || 50051;
+    const grpcHost = process.env.HOST || '0.0.0.0';
+    const grpcUrl = `${grpcHost}:${grpcPort}`;
+
     console.log('🚀 Starting Academy service...');
     console.log('🔍 Network Configuration:');
     console.log('HOST:', process.env.HOST || '0.0.0.0');
@@ -13,23 +24,11 @@ async function bootstrap() {
     console.log('PORT:', process.env.PORT || 3000);
     console.log('NODE_ENV:', process.env.NODE_ENV);
 
-    // Verificar variables críticas
     console.log('🔍 Environment Check:');
     console.log('DATABASE_URL configured:', !!process.env.DATABASE_URL);
     console.log('GCP_PROJECT_ID:', process.env.GCP_PROJECT_ID);
     console.log('HF_TOKEN configured:', !!process.env.HF_TOKEN);
     console.log('GITHUB_TOKEN configured:', !!process.env.GITHUB_TOKEN);
-
-    console.log('🏗️ Creating NestJS application...');
-    const app = await NestFactory.create(AppModule, {
-      logger: ['error', 'warn', 'log', 'debug', 'verbose'],
-    });
-    console.log('✅ NestJS app created successfully');
-
-    // SEPARAR PUERTOS: gRPC en 50051, HTTP en 3000
-    const httpPort = process.env.PORT || 3000;
-    const grpcPort = process.env.GRPC_PORT || 50051;
-    const grpcUrl = `0.0.0.0:${grpcPort}`;
 
     console.log('🚀 Configuring gRPC at:', grpcUrl);
     console.log('🌐 HTTP server will run on port:', httpPort);
@@ -49,7 +48,6 @@ async function bootstrap() {
             getProtoPath('roadmaps'),
             getProtoPath('grading'),
           ],
-          // USAR PUERTO SEPARADO PARA gRPC
           url: grpcUrl,
           keepalive: {
             keepaliveTimeMs: 30000,
