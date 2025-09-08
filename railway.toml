@@ -3,6 +3,7 @@ builder = "NIXPACKS"
 
 [build.nixpacksConfig]
 nodejs = "20"
+npm = "9"
 
 [deploy]
 healthcheckPath = "/health"

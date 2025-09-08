@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { GoogleAuth } from 'google-auth-library';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class GoogleEmbeddingService {
@@ -17,10 +19,43 @@ export class GoogleEmbeddingService {
   async init() {
     if (!this.client) {
       const auth = new GoogleAuth({
-        keyFile: process.env.GCP_CREDENTIALS!,
+        credentials: this.getCredentials(),
         scopes: ['https://www.googleapis.com/auth/cloud-platform'],
       });
       this.client = await auth.getClient();
+    }
+  }
+
+  private getCredentials(): Record<string, string> {
+    if (process.env.NODE_ENV === 'production') {
+      // En Railway, usar variables individuales
+      return {
+        type: 'service_account',
+        project_id: process.env.GCP_PROJECT_ID || '',
+        private_key_id: process.env.GCP_PRIVATE_KEY_ID || '',
+        private_key: process.env.GCP_PRIVATE_KEY?.replace(/\\n/g, '\n') || '',
+        client_email: process.env.GCP_CLIENT_EMAIL || '',
+        client_id: process.env.GCP_CLIENT_ID || '',
+        auth_uri: 'https://accounts.google.com/o/oauth2/auth',
+        token_uri: 'https://oauth2.googleapis.com/token',
+        auth_provider_x509_cert_url:
+          'https://www.googleapis.com/oauth2/v1/certs',
+        client_x509_cert_url: process.env.GCP_CLIENT_X509_CERT_URL || '',
+        universe_domain: 'googleapis.com',
+      };
+    } else {
+      // En desarrollo, usar archivo local de forma segura
+      try {
+        const credentialsPath = path.resolve(
+          __dirname,
+          '../../vertical-task-455721-e5-bdeefcfe2c8b.json',
+        );
+        const credentialsFile = fs.readFileSync(credentialsPath, 'utf8');
+        return JSON.parse(credentialsFile) as Record<string, string>;
+      } catch (error) {
+        console.error('Error loading GCP credentials file:', error);
+        throw new Error('GCP credentials file not found or invalid');
+      }
     }
   }
 
