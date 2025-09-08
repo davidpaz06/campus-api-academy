@@ -49,8 +49,10 @@ async function bootstrap() {
             getProtoPath('roadmaps'),
             getProtoPath('grading'),
           ],
-          url: grpcUrl,
+          // USAR EL MISMO PUERTO QUE HTTP (Railway maneja HTTP/2)
+          url: `0.0.0.0:${httpPort}`,
           credentials: ServerCredentials.createInsecure(),
+
           loader: {
             keepCase: true,
             longs: String,
