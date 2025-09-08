@@ -9,11 +9,13 @@ npm = "9"
 nixPkgs = ["nodejs_20", "npm-9_x"]
 cmds = []
 
-
-
-# Exponer ambos puertos en Railway
 [networking]
 serviceName = "campus-api-academy"
+
+# Exponer puerto gRPC específicamente
+[[networking.exposedPorts]]
+port = 50051
+protocol = "tcp"
 
 [experimental]
 configAsCode = true
