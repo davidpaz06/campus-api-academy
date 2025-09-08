@@ -49,8 +49,26 @@ export class CoursesController {
   async searchCourseWithAi(
     getCourseWithAiDto: SearchCourseWithAiReqDto,
   ): Promise<SearchCourseWithAiResDto> {
-    console.log('🤖 Calling searchCourseWithAi with data:', getCourseWithAiDto);
-    return await this.coursesService.searchCourseWithAi(getCourseWithAiDto);
+    console.log(
+      '🎯 Academy service received gRPC request for SearchCourseWithAi',
+    );
+    console.log(
+      '📨 Request data:',
+      JSON.stringify(getCourseWithAiDto, null, 2),
+    );
+    console.log('🔍 Request type:', typeof getCourseWithAiDto);
+    console.log('🔍 Request keys:', Object.keys(getCourseWithAiDto || {}));
+
+    try {
+      const result =
+        await this.coursesService.searchCourseWithAi(getCourseWithAiDto);
+      console.log('✅ Academy service successfully processed request');
+      console.log('📤 Response:', JSON.stringify(result, null, 2));
+      return result;
+    } catch (error) {
+      console.error('❌ Academy service error processing request:', error);
+      throw error;
+    }
   }
 
   @GrpcMethod('CoursesService', 'GetCourseById')
