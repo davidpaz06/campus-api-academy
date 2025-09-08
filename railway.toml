@@ -8,12 +8,8 @@ npm = "9"
 [phases.setup]
 nixPkgs = ["nodejs_20", "npm-9_x"]
 cmds = [
-  "echo 'Setting up npm configuration...'",
-  "npm config set @davidpaz06:registry https://npm.pkg.github.com",
-  "npm config set //npm.pkg.github.com/:_authToken $GITHUB_TOKEN",
-  "npm config set registry https://registry.npmjs.org",
-  "echo 'npm configuration completed'",
-  "npm config list"
+  "chmod +x setup-npm.sh",
+  "./setup-npm.sh"
 ]
 
 [phases.install]
