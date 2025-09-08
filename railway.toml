@@ -15,9 +15,11 @@ healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
-# CRÍTICO: Configurar red privada
-[deploy.privatePorts]
-port = 50051
-
+# CRÍTICO: Exponer puerto gRPC para Railway Private Network
 [experimental]
 configAsCode = true
+
+[networking]
+serviceName = "campus-api-academy"
+# Permitir conexiones internas en puerto 50051
+internalPort = 50051
