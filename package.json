@@ -10,6 +10,7 @@
     "npm": ">=10.0.0"
   },
   "scripts": {
+    "preinstall": "npm config set @davidpaz06:registry https://npm.pkg.github.com && npm config set //npm.pkg.github.com/:_authToken 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 && npm config set registry https://registry.npmjs.org",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
