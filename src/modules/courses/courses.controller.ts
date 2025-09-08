@@ -49,6 +49,7 @@ export class CoursesController {
   async searchCourseWithAi(
     getCourseWithAiDto: SearchCourseWithAiReqDto,
   ): Promise<SearchCourseWithAiResDto> {
+    console.log('🤖 Calling searchCourseWithAi with data:', getCourseWithAiDto);
     return await this.coursesService.searchCourseWithAi(getCourseWithAiDto);
   }
 
