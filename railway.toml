@@ -15,7 +15,8 @@ healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
-[deploy.exposedPort]
+# CRÍTICO: Configurar red privada
+[deploy.privatePorts]
 port = 50051
 
 [experimental]

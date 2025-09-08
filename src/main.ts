@@ -5,10 +5,17 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { getProtoPath } from '@davidpaz06/shared';
 
 async function bootstrap() {
-  // Crear aplicación híbrida para Railway
+  console.log('🔍 Network Configuration:');
+  console.log('HOST:', process.env.HOST || '0.0.0.0');
+  console.log('GRPC_PORT:', process.env.GRPC_PORT || 50051);
+  console.log('PORT:', process.env.PORT || 3000);
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+
   const app = await NestFactory.create(AppModule);
 
-  // Configurar gRPC microservice
+  const grpcUrl = `${process.env.HOST || '0.0.0.0'}:${process.env.GRPC_PORT || 50051}`;
+  console.log('🚀 Configuring gRPC at:', grpcUrl);
+
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.GRPC,
     options: {
